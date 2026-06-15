@@ -1,0 +1,59 @@
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  phone     String   @unique
+  name      String?
+  role      Role     @default(PARENT)
+  fcmToken  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bus {
+  id         String    @id @default(uuid())
+  busNo      String    @unique
+  driverName String
+  status     BusStatus @default(INACTIVE)
+  createdAt  DateTime  @default(now())
+}
+
+model LiveLocation {
+  id        String   @id @default(uuid())
+  busId     String
+  lat       Float
+  lng       Float
+  speed     Float    @default(0)
+  timestamp DateTime @default(now())
+}
+
+model Stop {
+  id    String @id @default(uuid())
+  name  String
+  lat   Float
+  lng   Float
+  busId String
+  order Int
+}
+
+enum Role {
+  PARENT
+  DRIVER
+  CONDUCTOR
+  ADMIN
+}
+
+enum BusStatus {
+  ACTIVE
+  INACTIVE
+  ON_TRIP
+}

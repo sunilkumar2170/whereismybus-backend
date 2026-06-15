@@ -1,0 +1,32 @@
+{
+  "name": "whereismybus-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.0",
+    "@prisma/adapter-neon": "^5.22.0",
+    "@prisma/client": "^5.22.0",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "expo-server-sdk": "^6.1.0",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.10.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.6.2",
+    "prisma": "^5.22.0",
+    "redis": "^5.12.1",
+    "socket.io": "^4.8.3",
+    "ws": "^8.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
