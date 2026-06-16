@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('../../firebase-admin.json');
+
+// ✅ Render pe Environment Variable se lo
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 // Firebase initialize
 if (!admin.apps.length) {
