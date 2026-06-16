@@ -1,7 +1,12 @@
 const admin = require('firebase-admin');
 
-// ✅ Render pe Environment Variable se lo
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+// ✅ Local pe file, Render pe environment variable
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  serviceAccount = require('../../firebase-admin.json');
+}
 
 // Firebase initialize
 if (!admin.apps.length) {
@@ -10,7 +15,6 @@ if (!admin.apps.length) {
   });
 }
 
-// Single token pe notification bhejo
 const sendNotification = async (fcmToken, title, body, data = {}) => {
   try {
     const message = {
@@ -33,7 +37,6 @@ const sendNotification = async (fcmToken, title, body, data = {}) => {
   }
 };
 
-// Multiple tokens pe bhejo (broadcast)
 const sendMulticast = async (fcmTokens, title, body, data = {}) => {
   if (!fcmTokens || fcmTokens.length === 0) return;
   try {
