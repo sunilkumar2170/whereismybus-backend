@@ -37,19 +37,42 @@ app.use('/api/stops', stopRoutes);
 const notificationRoutes = require('./routes/notificationRoutes');
 app.use('/api/notifications', notificationRoutes);
 
+// ✅ Naye Routes ADD KIYE
+const driverRoutes = require('./routes/driverRoutes');
+app.use('/api/drivers', driverRoutes);
+
+const studentRoutes = require('./routes/studentRoutes');
+app.use('/api/students', studentRoutes);
+
+const attendanceRoutes = require('./routes/attendanceRoutes');
+app.use('/api/attendance', attendanceRoutes);
+
+const maintenanceRoutes = require('./routes/maintenanceRoutes');
+app.use('/api/maintenance', maintenanceRoutes);
+
+const fuelRoutes = require('./routes/fuelRoutes');
+app.use('/api/fuel', fuelRoutes);
+
+const sosRoutes = require('./routes/sosRoutes');
+app.use('/api/sos', sosRoutes);
+
+
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api', adminRoutes);
+
 // ✅ Test SOS Route
 app.post('/api/test-sos', async (req, res) => {
   try {
     const { busId } = req.body;
     const { sendMulticast } = require('./services/notificationService');
-    
+
     const parents = await prisma.user.findMany({
       where: { role: 'PARENT', fcmToken: { not: null } }
     });
-    
+
     const tokens = parents.map(p => p.fcmToken).filter(Boolean);
     console.log('Tokens found:', tokens.length);
-    
+
     if (tokens.length > 0) {
       await sendMulticast(
         tokens,
