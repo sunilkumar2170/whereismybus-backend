@@ -10,39 +10,89 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   phone     String   @unique
   name      String?
   role      Role     @default(PARENT)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6)
   fcmToken  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Bus {
-  id         String    @id @default(uuid())
+  id         String    @id @default(dbgenerated("gen_random_uuid()"))
   busNo      String    @unique
   driverName String
   status     BusStatus @default(INACTIVE)
-  createdAt  DateTime  @default(now())
+  createdAt  DateTime  @default(now()) @db.Timestamp(6)
 }
 
 model LiveLocation {
-  id        String   @id @default(uuid())
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
   busId     String
   lat       Float
   lng       Float
   speed     Float    @default(0)
-  timestamp DateTime @default(now())
+  timestamp DateTime @default(now()) @db.Timestamp(6)
 }
 
 model Stop {
-  id    String @id @default(uuid())
+  id    String @id @default(dbgenerated("gen_random_uuid()"))
   name  String
   lat   Float
   lng   Float
   busId String
   order Int
+}
+
+model Admin {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Attendance {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  busId     String
+  studentId String
+  date      String
+  tripType  String   @default("pickup")
+  boarded   Boolean? @default(false)
+  createdAt DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Driver {
+  id            String   @id @default(dbgenerated("gen_random_uuid()"))
+  name          String
+  phone         String
+  busId         String?
+  createdAt     DateTime @default(now()) @db.Timestamp(6)
+  licenseNo     String?
+  licenseExpiry String?
+  experience    Int?     @default(0)
+}
+
+model Emergency {
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
+  busId      String
+  driverName String?
+  type       String   @default("SOS")
+  notes      String?
+  status     String?  @default("open")
+  createdAt  DateTime @default(now()) @db.Timestamp(6)
+}
+
+model Student {
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  name        String
+  admissionNo String
+  busId       String
+  parentPhone String
+  stopId      String?
+  class       String?
+  createdAt   DateTime @default(now()) @db.Timestamp(6)
 }
 
 enum Role {
