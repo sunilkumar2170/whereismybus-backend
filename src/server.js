@@ -66,11 +66,12 @@ app.post('/api/test-sos', async (req, res) => {
     const { busId } = req.body;
     const { sendMulticast } = require('./services/notificationService');
 
-    const parents = await prisma.user.findMany({
-      where: { role: 'PARENT', fcmToken: { not: null } }
+  
+    const users = await prisma.user.findMany({
+      where: { fcmToken: { not: null } }
     });
 
-    const tokens = parents.map(p => p.fcmToken).filter(Boolean);
+    const tokens = users.map(p => p.fcmToken).filter(Boolean);
     console.log('Tokens found:', tokens.length);
 
     if (tokens.length > 0) {
