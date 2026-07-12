@@ -42,4 +42,23 @@ const login = async (req, res) => {
   }
 };
 
+
+exports.adminLogin = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    // Raw "Admin" table se match — jo tune Neon mein banayi thi
+    const rows = await prisma.$queryRaw`
+      SELECT * FROM "Admin" WHERE email = ${email} LIMIT 1
+    `;
+    const admin = rows[0];
+    if (!admin) return res.status(401).json({ message: 'Admin not found' });
+    if (admin.password !== password) return res.status(401).json({ message: 'Wrong password' });
+
+    const token = jwt.sign({ id: admin.id, role: 'ADMIN' }, process.env.JWT_SECRET, { expiresIn: '30d' });
+    res.json({ token, user: { id: admin.id, email: admin.email, name: admin.name, role: 'ADMIN' } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = { register, login };
