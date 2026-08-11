@@ -3,6 +3,60 @@ const prisma = require('../db');
 
 const JWT_SECRET = 'whereismybus_secret_2026'; // sabke liye same secret
 
+// ── Parent ya Driver ke login/register response mein busId attach karo ──
+const attachBusInfo = async (user) => {
+  try {
+    // ── PARENT ── uska student dhoondo, wahi bus + route mil jaayega
+    if (user.role === 'PARENT') {
+      const rows = await prisma.$queryRaw`
+        SELECT s.id as "studentId", s.name as "studentName", s."busId",
+               s."routeId", s.class, s."stopId", b."busNo"
+        FROM "Student" s
+        LEFT JOIN "Bus" b ON b.id = s."busId"
+        WHERE s."parentPhone" = ${user.phone}
+        LIMIT 1
+      `;
+      const student = rows[0];
+      if (student) {
+        return {
+          ...user,
+          studentId:   student.studentId,
+          studentName: student.studentName,
+          busId:       student.busId,
+          busNo:       student.busNo,
+          routeId:     student.routeId,
+          stopId:      student.stopId,
+          class:       student.class,
+        };
+      }
+      return { ...user, busId: null, studentId: null };
+    }
+
+    // ── DRIVER / CONDUCTOR ── admin ne Driver table mein jo bus assign kiya hai
+    if (user.role === 'DRIVER' || user.role === 'CONDUCTOR') {
+      const rows = await prisma.$queryRaw`
+        SELECT d."busId", b."busNo"
+        FROM "Driver" d
+        LEFT JOIN "Bus" b ON b.id = d."busId"
+        WHERE d.phone = ${user.phone}
+        LIMIT 1
+      `;
+      const driver = rows[0];
+      if (driver && driver.busId) {
+        return { ...user, busId: driver.busId, busNo: driver.busNo };
+      }
+      return { ...user, busId: null, busNo: null };
+    }
+
+    // ── ADMIN ── kuch attach nahi karna
+    return user;
+
+  } catch (err) {
+    console.log('attachBusInfo error:', err.message);
+    return { ...user, busId: null };
+  }
+};
+
 const register = async (req, res) => {
   try {
     const { phone, name, role } = req.body;
@@ -14,7 +68,9 @@ const register = async (req, res) => {
       data: { phone, name, role: role || 'PARENT' }
     });
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(201).json({ success: true, token, user });
+
+    const fullUser = await attachBusInfo(user);
+    res.status(201).json({ success: true, token, user: fullUser });
   } catch (err) {
     console.log('Register Error:', err.message);
     res.status(500).json({ message: err.message });
@@ -29,7 +85,9 @@ const login = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    res.json({ success: true, token, user });
+
+    const fullUser = await attachBusInfo(user);
+    res.json({ success: true, token, user: fullUser });
   } catch (err) {
     console.log('Login Error:', err.message);
     res.status(500).json({ message: err.message });

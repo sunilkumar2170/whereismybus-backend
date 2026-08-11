@@ -60,6 +60,13 @@ app.use('/api/sos', sosRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api', adminRoutes);
 
+
+
+const routeRoutes  = require('./routes/routeRoutes');
+const adminRoutes  = require('./routes/adminRoutes');
+
+app.use('/api/routes',     routeRoutes);
+app.use('/api',            adminRoutes);
 // ✅ Test SOS Route
 app.post('/api/test-sos', async (req, res) => {
   try {

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "862104001077",
+    "project_id": "whereismybus-d60c4",
+    "storage_bucket": "whereismybus-d60c4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:862104001077:android:3cdb3d3d3293943ca7af7c",
+        "android_client_info": {
+          "package_name": "com.wheresmybus.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgIvjaESNJnLdWccaONAlO-jzQ_CI5n5g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
