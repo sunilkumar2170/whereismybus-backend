@@ -21,59 +21,64 @@ prisma.$connect()
   .then(() => console.log('Database Connected ✅'))
   .catch(err => console.log('DB Error:', err.message));
 
+// ── Auth ──
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
+// ── Bus ──
 const busRoutes = require('./routes/busRoutes');
 app.use('/api/buses', busRoutes);
 
+// ── Trip ──
 const tripRoutes = require('./routes/tripRoutes');
 app.use('/api/trips', tripRoutes);
 
+// ── Stop (legacy flat table — kept for backward compat) ──
 const stopRoutes = require('./routes/stopRoutes');
 app.use('/api/stops', stopRoutes);
 
-// ✅ Notification Route ADD KIYA
+// ── Notifications ──
 const notificationRoutes = require('./routes/notificationRoutes');
 app.use('/api/notifications', notificationRoutes);
 
-// ✅ Naye Routes ADD KIYE
+// ── Driver ──
 const driverRoutes = require('./routes/driverRoutes');
 app.use('/api/drivers', driverRoutes);
 
+// ── Student ──
 const studentRoutes = require('./routes/studentRoutes');
 app.use('/api/students', studentRoutes);
 
+// ── Attendance ──
 const attendanceRoutes = require('./routes/attendanceRoutes');
 app.use('/api/attendance', attendanceRoutes);
 
+// ── Maintenance ──
 const maintenanceRoutes = require('./routes/maintenanceRoutes');
 app.use('/api/maintenance', maintenanceRoutes);
 
+// ── Fuel ──
 const fuelRoutes = require('./routes/fuelRoutes');
 app.use('/api/fuel', fuelRoutes);
 
+// ── SOS ──
 const sosRoutes = require('./routes/sosRoutes');
 app.use('/api/sos', sosRoutes);
 
-
-const adminRoutes = require('./routes/adminRoutes');
-app.use('/api', adminRoutes);
-
-
-
-const routeRoutes  = require('./routes/routeRoutes');
+// ── Route (Bus → Route → RouteStop) + Admin ──
+// (Yeh dono ek hi baar declare hote hain — pehle duplicate tha, isliye crash ho raha tha)
+const routeRoutes = require('./routes/routeRoutes');
 const adminRoutes  = require('./routes/adminRoutes');
 
-app.use('/api/routes',     routeRoutes);
-app.use('/api',            adminRoutes);
+app.use('/api/routes', routeRoutes);
+app.use('/api', adminRoutes);
+
 // ✅ Test SOS Route
 app.post('/api/test-sos', async (req, res) => {
   try {
     const { busId } = req.body;
     const { sendMulticast } = require('./services/notificationService');
 
-  
     const users = await prisma.user.findMany({
       where: { fcmToken: { not: null } }
     });
