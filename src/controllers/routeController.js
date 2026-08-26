@@ -39,9 +39,17 @@ const getRouteById = async (req, res) => {
 };
 
 // ── GET ROUTE BY BUS ──
+// FIX: pehle sirf Route + RouteStop return hota tha — Driver kabhi query
+// hi nahi hui thi, isliye Parent Screen mein route?.driver hamesha
+// undefined aata tha. Ab har route ke saath uske busId se Driver table
+// (Driver.busId = Bus.id) lookup karke real name/phone attach karte hain.
+// Bus.driverName ya User.name kahin use nahi kiya — sirf Driver table.
 const getRouteByBus = async (req, res) => {
   try {
     const { busId } = req.params;
+    console.log('[BACKEND] getRouteByBus called for assigned busId:', busId);
+
+    // STRICT: sirf isi busId ka route — koi aur bus ke stops kabhi nahi aa sakte
     const routes = await prisma.$queryRaw`
       SELECT r.*,
         COALESCE(
@@ -53,7 +61,19 @@ const getRouteByBus = async (req, res) => {
       WHERE r."busId" = ${busId}
       GROUP BY r.id
     `;
-    res.json({ success: true, routes });
+    console.log('[BACKEND] routes found for this busId:', routes.length);
+    console.log('[BACKEND] ADMIN STOPS (order preserved):', routes[0]?.stops?.map(s => s.name));
+    console.log('[BACKEND] STOP COUNT:', routes[0]?.stops?.length || 0);
+
+    const driver = await prisma.driver.findFirst({ where: { busId } });
+    const driverInfo = driver
+      ? { name: driver.name, phone: driver.phone }
+      : null; // null => frontend "Driver not assigned" state
+    console.log('[BACKEND] driver for this busId:', driverInfo);
+
+    const routesWithDriver = routes.map(r => ({ ...r, driver: driverInfo }));
+
+    res.json({ success: true, routes: routesWithDriver });
   } catch (err) { res.status(500).json({ message: err.message }); }
 };
 
