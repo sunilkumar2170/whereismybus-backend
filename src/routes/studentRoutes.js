@@ -1,9 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { getStudents, addStudent, deleteStudent, getStudentsByBus } = require('../controllers/studentController');
+const {
+  getStopsByBus, getAllStops, createStop, deleteStop, reorderStops,
+} = require('../controllers/stopController');
 const { protect } = require('../middleware/authMiddleware');
-router.get('/', protect, getStudents);
-router.post('/', protect, addStudent);
-router.delete('/:id', protect, deleteStudent);
-router.get('/bus/:busId', protect, getStudentsByBus);
+
+router.get('/', protect, getAllStops);
+router.get('/bus/:busId', protect, getStopsByBus);
+router.post('/', protect, createStop);
+router.patch('/reorder', protect, reorderStops);
+router.delete('/:id', protect, deleteStop);
+
 module.exports = router;
