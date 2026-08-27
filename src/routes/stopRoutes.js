@@ -12,7 +12,8 @@ router.post('/', protect, createStop);
 router.patch('/reorder', protect, reorderStops);
 router.delete('/:id', protect, deleteStop);
 
-// ── LEGACY — unchanged: GET /api/stops/:busId ──
+// ── LEGACY — GET /api/stops/:busId (your controller's function is
+// named getStops, not getStopsByBus — that mismatch was the crash) ──
 router.get('/:busId', protect, getStops);
 
 module.exports = router;
