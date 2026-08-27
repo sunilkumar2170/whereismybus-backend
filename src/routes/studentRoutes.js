@@ -12,3 +12,4 @@ router.patch('/reorder', protect, reorderStops);
 router.delete('/:id', protect, deleteStop);
 
 module.exports = router;
+
