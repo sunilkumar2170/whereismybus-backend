@@ -1,18 +1,20 @@
 const prisma = require('../db');
 
-// ── GET all drivers (from the Driver table — NOT User) ──
 const getDrivers = async (req, res) => {
   try {
+    console.log('[DRIVER] getDrivers: start');
     const drivers = await prisma.driver.findMany({ orderBy: { name: 'asc' } });
-    // attach busNo for display (Driver.busId has no Prisma relation, so resolve manually)
+    console.log('[DRIVER] getDrivers: fetched', drivers.length, 'drivers');
     const busIds = [...new Set(drivers.map(d => d.busId).filter(Boolean))];
     const buses = busIds.length
       ? await prisma.bus.findMany({ where: { id: { in: busIds } } })
       : [];
     const busMap = Object.fromEntries(buses.map(b => [b.id, b.busNo]));
     const enriched = drivers.map(d => ({ ...d, busNo: d.busId ? (busMap[d.busId] || null) : null }));
+    console.log('[DRIVER] getDrivers: done');
     res.json({ success: true, drivers: enriched });
   } catch (err) {
+    console.log('[DRIVER] getDrivers: ERROR', err.message);
     res.status(500).json({ message: err.message });
   }
 };
@@ -27,32 +29,36 @@ const getDriverById = async (req, res) => {
   }
 };
 
-// ── CREATE — this endpoint was MISSING entirely. This is the actual
-// root cause of "driver saves in backend but never shows in admin UI":
-// there was no POST handler, so the create request had nowhere to go. ──
 const createDriver = async (req, res) => {
+  console.log('[DRIVER] createDriver: ENTRY', req.body);
   try {
     const { name, phone, licenseNo, licenseExpiry, experience, busId } = req.body;
-    console.log('[ADMIN] Driver create payload:', req.body);
 
     if (!name || !phone) {
+      console.log('[DRIVER] createDriver: missing name/phone, returning 400');
       return res.status(400).json({ message: 'Name and phone are required' });
     }
 
-    // Prevent duplicate driver on same phone
+    console.log('[DRIVER] createDriver: checking existing phone...');
     const existingPhone = await prisma.driver.findFirst({ where: { phone } });
+    console.log('[DRIVER] createDriver: existingPhone check done ->', !!existingPhone);
+
     if (existingPhone) {
+      console.log('[DRIVER] createDriver: duplicate phone, returning 400');
       return res.status(400).json({ message: `Driver with phone ${phone} already exists` });
     }
 
-    // If a bus is being assigned at creation time, enforce one-active-driver-per-bus
     if (busId) {
+      console.log('[DRIVER] createDriver: checking bus conflict for busId', busId);
       const conflict = await prisma.driver.findFirst({ where: { busId } });
+      console.log('[DRIVER] createDriver: bus conflict check done ->', !!conflict);
       if (conflict) {
+        console.log('[DRIVER] createDriver: bus already assigned, returning 400');
         return res.status(400).json({ message: 'This bus is already assigned to another active driver.' });
       }
     }
 
+    console.log('[DRIVER] createDriver: creating row now...');
     const driver = await prisma.driver.create({
       data: {
         name,
@@ -63,11 +69,12 @@ const createDriver = async (req, res) => {
         busId: busId || null,
       },
     });
+    console.log('[DRIVER] createDriver: CREATED SUCCESSFULLY', driver.id);
 
-    console.log('[ADMIN] Driver created:', driver);
     res.status(201).json({ success: true, driver });
+    console.log('[DRIVER] createDriver: response sent');
   } catch (err) {
-    console.log('[ADMIN] Driver create error:', err.message);
+    console.log('[DRIVER] createDriver: EXCEPTION CAUGHT ->', err.message, err.stack);
     res.status(500).json({ message: err.message });
   }
 };
@@ -100,11 +107,9 @@ const deleteDriver = async (req, res) => {
   }
 };
 
-// ── ASSIGN / REASSIGN a bus to a driver — dedicated endpoint so the
-// UI can show a specific conflict message instead of a generic error. ──
 const assignBus = async (req, res) => {
   try {
-    const { busId } = req.body; // busId: null/''/undefined = unassign
+    const { busId } = req.body;
     const driverId = req.params.id;
 
     if (busId) {
@@ -124,7 +129,6 @@ const assignBus = async (req, res) => {
       data: { busId: busId || null },
     });
 
-    console.log('[ADMIN] Driver', driverId, 'assigned to bus', busId);
     res.json({ success: true, driver });
   } catch (err) {
     res.status(500).json({ message: err.message });
