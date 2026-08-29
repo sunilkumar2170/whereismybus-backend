@@ -36,13 +36,29 @@ model LiveLocation {
   timestamp DateTime @default(now()) @db.Timestamp(6)
 }
 
+// ── needsLocation added: true when a stop was auto-created by CSV bulk
+// import and geocoding either failed or returned a low-confidence
+// match — Admin must confirm/fix its lat/lng before it's trusted for
+// navigation/ETA. Manually-added stops (map picker) are always false. ──
 model Stop {
-  id    String @id @default(dbgenerated("gen_random_uuid()"))
-  name  String
-  lat   Float
-  lng   Float
-  busId String
-  order Int
+  id            String  @id @default(dbgenerated("gen_random_uuid()"))
+  name          String
+  lat           Float
+  lng           Float
+  busId         String
+  order         Int
+  needsLocation Boolean @default(false)
+}
+
+// ── NEW — one-time Admin setup: acts as the geocoding anchor for
+// auto-created stops and the destination for auto-generated routes. ──
+model School {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  name      String
+  address   String?
+  lat       Float
+  lng       Float
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp(6)
 }
 
 model Admin {
@@ -106,4 +122,32 @@ enum BusStatus {
   ACTIVE
   INACTIVE
   ON_TRIP
+}
+
+model Route {
+  id         String      @id @default(dbgenerated("gen_random_uuid()"))
+  name       String
+  busId      String
+  startPoint String
+  endPoint   String?
+  createdAt  DateTime    @default(now()) @db.Timestamp(6)
+
+  stops      RouteStop[]
+}
+
+// ── FIX: @relation(...) must be written on a single line — the
+// original multi-line version (fields:/references:/onDelete: each on
+// their own line) is what Prisma 5.22's parser was rejecting. ──
+model RouteStop {
+  id                String   @id @default(dbgenerated("gen_random_uuid()"))
+  routeId           String
+  name              String
+  lat               Float
+  lng               Float
+  order             Int
+  distanceFromStart Float    @default(0)
+  estimatedTime     Int      @default(0)
+  createdAt         DateTime @default(now()) @db.Timestamp(6)
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
 }
