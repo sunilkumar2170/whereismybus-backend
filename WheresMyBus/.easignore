@@ -1,0 +1,14 @@
+node_modules
+.git
+android
+ios
+*.log
+.expo
+dist
+web-build
+coverage
+__tests__
+*.test.js
+*.spec.js
+.DS_Store
+Thumbs.db

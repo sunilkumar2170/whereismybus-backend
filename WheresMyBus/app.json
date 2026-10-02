@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "WheresMyBus",
+    "slug": "WheresMyBus",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0A0F1C"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wheresmybus.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Where Is My Bus needs location to track the bus in real-time.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Where Is My Bus needs background location so the bus can be tracked even when the app is minimized.",
+        "NSLocationAlwaysUsageDescription": "Where Is My Bus needs background location so the bus can be tracked even when the app is minimized.",
+        "UIBackgroundModes": [
+          "location",
+          "fetch"
+        ]
+      }
+    },
+    "android": {
+      "package": "com.wheresmybus.app",
+      "googleServicesFile": "./google-services.json",
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0F1C",
+        "foregroundImage": "./assets/android-icon-foreground.png"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.INTERNET"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Where Is My Bus to use your location to track the bus in real-time, even when the app is in background.",
+          "locationAlwaysPermission": "Allow Where Is My Bus to use your location in background for continuous bus tracking.",
+          "locationWhenInUsePermission": "Allow Where Is My Bus to use your location to track the bus.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      "expo-task-manager",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#ffffff",
+          "sounds": []
+        }
+      ]
+    ],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "17f82e52-909d-486e-a2d4-e833a13fd5a7"
+      }
+    }
+  }
+}
