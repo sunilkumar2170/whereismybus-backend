@@ -146,22 +146,30 @@ function drawRouteArrows(coords){
   }
 }
 
-if(stopsData.length>1){
-  var c=stopsData.map(function(s){return[s.lat,s.lng];});
-  L.polyline(c,{color:'#BDD5FA',weight:14,opacity:0.45,lineJoin:'round',lineCap:'round'}).addTo(map);
-  L.polyline(c,{color:'#1A73E8',weight:7,opacity:0.95,lineJoin:'round',lineCap:'round',smoothFactor:1.5}).addTo(map);
-  drawRouteArrows(c);
-  drawTurnMarkers(stopsData);
+if(stopsData.length>0){
+  var c=stopsData.map(function(s){ return [parseFloat(s.lat), parseFloat(s.lng)]; });
+  if(c.length>1){
+    L.polyline(c,{color:'#BDD5FA',weight:14,opacity:0.45,lineJoin:'round',lineCap:'round'}).addTo(map);
+    L.polyline(c,{color:'#1A73E8',weight:7,opacity:0.95,lineJoin:'round',lineCap:'round',smoothFactor:1.5}).addTo(map);
+    drawRouteArrows(c);
+    drawTurnMarkers(stopsData);
+
+    try {
+      var bounds = L.latLngBounds(c);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+    } catch(err){}
+  }
 }
 
 stopsData.forEach(function(s,i){
+  var lat = parseFloat(s.lat), lng = parseFloat(s.lng);
   var isFirst=i===0,isLast=i===stopsData.length-1;
   var isMine = myStopId && (s.id===myStopId);
   var col=isFirst?'#34A853':isLast?'#EA4335':'#1A73E8';
   var r=isFirst?12:isLast?14:9;
 
   if(isMine){
-    L.marker([s.lat,s.lng],{
+    L.marker([lat,lng],{
       icon:L.divIcon({
         html:'<div style="position:relative;width:26px;height:26px">'+
           '<div class="my-pulse"><\/div>'+
@@ -582,16 +590,12 @@ export default function HomeScreen({ user, onLogout }) {
       Alert.alert('Number not available', 'Driver ka contact number abhi backend me save nahi hai.');
       return;
     }
-    const url = `tel:${driverPhone}`;
-    Linking.canOpenURL(url)
-      .then(supported => {
-        if (!supported) {
-          Alert.alert('Cannot place call', 'Is device par call feature available nahi hai.');
-          return;
-        }
-        return Linking.openURL(url);
-      })
-      .catch(() => Alert.alert('Cannot place call', 'Kuch galat ho gaya, dobara try karo.'));
+    const cleanPhone = String(driverPhone).replace(/[^\d+]/g, '');
+    const url = `tel:${cleanPhone}`;
+    Linking.openURL(url).catch((err) => {
+      console.log('Call error:', err.message);
+      Alert.alert('Cannot place call', `Driver number: ${cleanPhone}`);
+    });
   }, [driverPhone]);
 
   // ══════════════════════════════════════════════════════════════════

@@ -149,6 +149,10 @@ window.initStops=function(stopsJson){
     L.polyline(coords,{color:'#a8c7fa',weight:14,opacity:0.35,lineJoin:'round',lineCap:'round'}).addTo(routeLayer);
     L.polyline(coords,{color:'#1A73E8',weight:6,opacity:0.95,lineJoin:'round',lineCap:'round',smoothFactor:1.5}).addTo(routeLayer);
     drawRouteArrows(coords);
+    try {
+      var bounds = L.latLngBounds(coords);
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+    } catch(err){}
   }
   stops.forEach(function(s,i){
     var isFirst=(i===0),isLast=(i===stops.length-1);
@@ -368,12 +372,14 @@ export default function DriverScreen({ user, onLogout }) {
       if (isRunning) return;
       _bgBusId = busIdRef.current;
       await Location.startLocationUpdatesAsync(LOCATION_TASK, {
-        accuracy          : Location.Accuracy.Balanced,
-        timeInterval      : 4000,
-        distanceInterval  : 5,
+        accuracy          : Location.Accuracy.BestForNavigation,
+        timeInterval      : 2000,
+        distanceInterval  : 0,
+        deferredUpdatesInterval: 2000,
+        deferredUpdatesDistance: 0,
         foregroundService : {
-          notificationTitle  : '🚌 Where Is My Bus',
-          notificationBody   : `Trip active on ${busNo || busIdRef.current} — sharing location`,
+          notificationTitle  : '🚌 Where Is My Bus — Live Tracking Active',
+          notificationBody   : `Sharing live location for ${busNo || busIdRef.current}`,
           notificationColor  : '#00D4AA',
           sticky: true,
         },
