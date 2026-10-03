@@ -156,6 +156,11 @@ const gpsSocket = (io) => {
       console.log('SOS triggered:', busId);
 
       try {
+        // Database mein save emergency log
+        prisma.emergency.create({
+          data: { busId, driverName: driverName || 'Driver', notes: 'SOS Emergency Alert', status: 'open' }
+        }).catch(err => console.log('Emergency DB save error:', err.message));
+
         // Sirf isi bus ke students ke parents ko alert
         const tokens = await getParentTokensForBus(busId);
         if (tokens.length > 0) {

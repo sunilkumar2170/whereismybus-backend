@@ -10,6 +10,7 @@ import { logout } from '../services/api';
 
 import * as Location from 'expo-location';
 import { WebView } from 'react-native-webview';
+import { io } from 'socket.io-client';
 
 const API = 'https://whereismybus-backend.onrender.com';
 const W   = Dimensions.get('window').width;
@@ -377,6 +378,8 @@ function AdminScreenContent({ user, onLogout }) {
   const [routeStopSearching,     setRouteStopSearching]     = useState(false);
   const [routeStopSearchError,   setRouteStopSearchError]   = useState('');
 
+  const adminSocketRef = useRef(null);
+
   useEffect(() => {
     AsyncStorage.getItem('token')
       .then(t => {
@@ -385,6 +388,30 @@ function AdminScreenContent({ user, onLogout }) {
       })
       .catch(e => { console.log('AsyncStorage error:', e.message); setLoading(false); });
   }, []);
+
+  // 🚨 Real-time Socket Listener for Admin (SOS Alerts & Live Updates)
+  useEffect(() => {
+    adminSocketRef.current = io(API, { transports: ['websocket'], reconnection: true });
+    adminSocketRef.current.on('connect', () => {
+      adminSocketRef.current.emit('joinAsAdmin');
+      console.log('[ADMIN] Joined admins socket room ✅');
+    });
+
+    adminSocketRef.current.on('sosAlert', (data) => {
+      console.log('[ADMIN] REALTIME SOS ALERT:', data);
+      Alert.alert(
+        '🚨 EMERGENCY SOS ALERT!',
+        `Bus ${data.busId || ''} mein emergency alert trigger hua hai!\n\nDriver: ${data.driverName || 'Driver'}\nTime: ${new Date(data.timestamp || Date.now()).toLocaleTimeString()}`,
+        [
+          { text: 'View SOS Tab 🚨', onPress: () => setTab('sos') },
+          { text: 'Acknowledge', style: 'cancel' }
+        ]
+      );
+      if (token) loadAll(token);
+    });
+
+    return () => adminSocketRef.current?.disconnect();
+  }, [token, loadAll]);
 
   const loadAll = useCallback(async (t) => {
     if (!t) return;
@@ -732,7 +759,7 @@ function AdminScreenContent({ user, onLogout }) {
   // FIX (gap #8): block adding a stop whose name already exists on this
   // same bus (case-insensitive) — the spec calls this out as a required
   // duplicate check ("Duplicate stop on same route").
-  const addStop = async () => {
+  const addStop = async (keepOpen = false) => {
     if (!fStop.name) return Alert.alert('Required', 'Stop name daalo');
     if (!fStop.busId) return Alert.alert('Required', 'Bus select karo');
     if (!fStop.lat || !fStop.lng)
@@ -747,8 +774,12 @@ function AdminScreenContent({ user, onLogout }) {
       busId: fStop.busId, name: fStop.name, lat: parseFloat(fStop.lat), lng: parseFloat(fStop.lng),
     }, token);
     if (r?.success || r?.stop) {
-      Alert.alert('✅ Success', 'Stop added!');
-      setMStop(false);
+      if (!keepOpen) {
+        Alert.alert('✅ Success', 'Stop added!');
+        setMStop(false);
+      } else {
+        Alert.alert('✅ Success', `"${fStop.name}" added! Next stop add karo.`);
+      }
       setFStop({ name: '', lat: '', lng: '', busId: fStop.busId }); // keep bus selected for adding more stops
       setStopLocManual(false);
       loadAll(token);
@@ -835,11 +866,22 @@ function AdminScreenContent({ user, onLogout }) {
     setMMapPicker(true);
   };
 
-  const confirmMapLocation = () => {
+  const confirmMapLocation = async () => {
     if (!mapMarker) return Alert.alert('Select Location', 'Map par tap karke pehle location select karo');
     setFStop(prev => ({ ...prev, lat: String(mapMarker.lat), lng: String(mapMarker.lng) }));
     setStopLocManual(false);
     setMMapPicker(false);
+
+    if (!fStop.name.trim()) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${mapMarker.lat}&lon=${mapMarker.lng}&format=json`);
+        const json = await res.json();
+        const placeName = json.address?.road || json.address?.suburb || json.address?.city || json.display_name?.split(',')[0];
+        if (placeName) {
+          setFStop(prev => ({ ...prev, name: placeName }));
+        }
+      } catch(e){}
+    }
   };
 
   // ── STUDENT ──
@@ -1762,7 +1804,14 @@ function AdminScreenContent({ user, onLogout }) {
         </Text>
 
         <View style={{ height: 8 }} />
-        <PBtn label="✅ Add Stop" onPress={addStop} />
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <View style={{ flex: 1 }}>
+            <PBtn label="➕ Add & Next Stop" onPress={() => addStop(true)} color="#34A853" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <PBtn label="✅ Add & Close" onPress={() => addStop(false)} color={P} />
+          </View>
+        </View>
       </FormModal>
 
       <Modal visible={mMapPicker} animationType="slide" onRequestClose={() => setMMapPicker(false)}>
